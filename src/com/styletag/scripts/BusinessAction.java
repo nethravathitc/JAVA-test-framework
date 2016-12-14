@@ -83,9 +83,9 @@ public class BusinessAction {
 		search_keyword=xl.read(1,0);
 		sort_value=xl.read(1,1);
 		sort_value=sort_value.replaceAll("[^0-9]", "");
-		System.out.println("stirng sort value "+sort_value);
 		sort_value_int=Integer.parseInt(sort_value);
 		System.out.println("sort value: "+sort_value_int);
+		
 		
 		System.out.println("Clicking on search tab");
 		webdriver.findElement(By.cssSelector(UIobjects.search_field_css)).click();
@@ -95,40 +95,50 @@ public class BusinessAction {
 		webdriver.findElement(By.cssSelector(UIobjects.search_button_css)).click();
 		String title = webdriver.findElement(By.cssSelector(UIobjects.page_title_css)).getText();
 		System.out.println("Search page title : "+title);
-		
-		
-		String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
-		String numberOnly= value.replaceAll("[^0-9]", "");
-		//System.out.println(numberOnly);
-		count = Integer.parseInt(numberOnly);
-		System.out.println("slider value is: "+count);
-		sort(sort_value_int,count);
-		//compare(count);
-		
-		
-				
+		sort(sort_value_int);
+			
 	}
-	public void sort(int option, int count){
+	public void sort(int option){
+		wait = new WebDriverWait(webdriver,5 );
 		if (option==1){
 		System.out.println("clicking on Low-High");
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.low_high_css)));
 		webdriver.findElement(By.cssSelector(UIobjects.low_high_css)).click();
-		compare(option, count);
+		compare(option);
 		}
 		if (option == 2){
 			System.out.println("clicking on High-Low");
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.high_low_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.high_low_css)).click();
-			compare(option, count);
+			compare(option);
 		}
 		
 	}
-	public void compare(int option,int count)
-	{
+	public void compare(int option)
+	{   
 		//try
+		int count1=0;
+		System.out.println("inside compare\n");
+		try {
+			Thread.sleep(9);
+			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
+			String numberOnly= value.replaceAll("[^0-9]", "");
+			count1 = Integer.parseInt(numberOnly);
+			System.out.println("slider value is: "+count1);
+		} catch (NumberFormatException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		{
 			String Sprice1,Sprice2;
-			int Iprice1,Iprice2,flag=0,j=1;
-			wait = new WebDriverWait(webdriver,5);
-			for (int i=1;i<count;i++){
+			int Iprice1,Iprice2,j=1;
+			int sort_flag=0;
+			wait = new WebDriverWait(webdriver,2);
+          for (int i=1;i<count1;i++){
 				
 				try {
 					Thread.sleep(5);
@@ -147,19 +157,19 @@ public class BusinessAction {
 				Sprice2=webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText(); 
 				//System.out.println("second i value " +i);
 				
-				System.out.println("price1 and price2 before replace all"+Sprice1+Sprice2);
+				//System.out.println("price1 and price2 before replace all"+Sprice1+Sprice2);
 				Sprice1=Sprice1.replaceAll("[^0-9]" ,"");
 				Sprice2=Sprice2.replaceAll("[^0-9]", "");
 				Iprice1=Integer.parseInt(Sprice1);
 			
 				Iprice2=Integer.parseInt(Sprice2);
 				
-				System.out.println(Iprice2);
+				//System.out.println(Iprice2);
 				if(option==1){
 					if(Iprice1>Iprice2)
 					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
 						System.out.println("First product price: "+Iprice1+"second product price: "+Sprice2);
-						flag=1;
+						sort_flag=1;
 						break;
 					}
 				}
@@ -167,7 +177,7 @@ public class BusinessAction {
 					if(Iprice1<Iprice2)
 					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
 					    System.out.println("First product price: "+Iprice1+"second product price: "+Sprice2);
-						flag=1;
+					    sort_flag=1;
 						break;
 					}
 				}
@@ -189,11 +199,11 @@ public class BusinessAction {
 				}
 			
 			}
-			if(flag==0 && option==1)
+			if(sort_flag==0 && option==1)
 				System.out.println("products are acended_by_master_price");
-			else if(flag==0 && option==2)
+			else if(sort_flag==0 && option==2)
 				System.out.println("products are decended_by_master_price");
-			else if(flag==1)
+			else if(sort_flag==1)
 				System.out.println("product are not in order");
 		}/* catch (InterruptedException e) {
 			// TODO Auto-generated catch block
