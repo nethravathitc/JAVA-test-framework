@@ -24,6 +24,7 @@ public class Example {
 	Actions act;
 	String pd_product_name ,ct_product_name,orderNo;
 	int sort_flag;
+	ExcelRead xl;
 	
 	public static void main(String[] args){
 		
@@ -376,7 +377,7 @@ public class Example {
 		webdriver.findElement(By.cssSelector(UIobjects.search_button_css)).click();
 		String title = webdriver.findElement(By.cssSelector(UIobjects.page_title_css)).getText();
 		System.out.println("Search page title : "+title);
-		sort(sort_value_int);
+		//sort(sort_value_int);
 			
 	}
 	public void sort(int option){
@@ -401,7 +402,7 @@ public class Example {
 		int count1=0;
 		System.out.println("inside compare");
 		try {
-			Thread.sleep(9);
+			Thread.sleep(1000);
 			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
 			String numberOnly= value.replaceAll("[^0-9]", "");
 			count1 = Integer.parseInt(numberOnly);
@@ -449,7 +450,7 @@ public class Example {
 				if(option==1){
 					if(Iprice1>Iprice2)
 					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
-						System.out.println("product"+(i-1)+": price: "+Iprice1+"product"+i+" price: "+Sprice2);
+						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 						sort_flag=1;
 						break;
 					}
@@ -457,7 +458,7 @@ public class Example {
 				if (option==2 ){
 					if(Iprice1<Iprice2)
 					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
-					    System.out.println("product"+(i-1)+" price: "+Iprice1+"product"+i+" price: "+Sprice2);
+					    System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 					    sort_flag=1;
 						break;
 					}
@@ -487,6 +488,13 @@ public class Example {
 			else if(sort_flag==1)
 			{	
 				System.out.println("products are not in order");
+				File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
+				try {
+					FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//product_price_mismatch.png"));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 			
 			}
@@ -538,12 +546,78 @@ public class Example {
 		new Actions(webdriver).moveToElement(webdriver.findElement(By.cssSelector(UIobjects.color_css))).build().perform();
 			
 		wait= new WebDriverWait(webdriver, 20);
-		for(int j=2;j<=7;j++)//starting from discount filters
+		for(int j=3;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
 		{
+			if(j==2||j==7)// j=2 - Discount and j=7 - Delivery type filters which are in collapsed mode
+			{
+				if (j==7)
+				{
+					// to collapse the Color filter
+					wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-2)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+					webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-2)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
+					
+					//to collapse the Dimension filter
+					wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-1)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+					webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-1)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
+					
+				}
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+				webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
+			}
+			WebElement filtertype = webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a"));
+			System.out.println("\nFILTER TYPE: "+filtertype.getText().toLowerCase());
+			String lowercase=filtertype.getText().toLowerCase().replaceAll("[^a-z]","_");
 			
-			//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(selector)))
+			List<WebElement> filterattribute = webdriver.findElements(By.id(lowercase));	
+			for(WebElement we :filterattribute )
+			{
+				String s=we.getText();
+				System.out.println("FILTER ATTRIBUTES are: "+s);
+				s1 = s.split("\\n");
+				length=s1.length; System.out.println("length is "+length);
+				
+			}
+			for(int i=3;i<=length;i++ )
+			{  
+				System.out.println("\nclicking on: "+s1[i-1]);
+				System.out.println("i value "+i);
+				
+				
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
+				webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
+				//waitForSpinner();
+				try {
+					//System.out.println("thread.sleep AFTER filter click");
+					Thread.sleep(1000);
+					sort(1);//low_high
+					try {
+						webdriver.findElement(By.cssSelector(".scrollup")).click();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					sort(2);//high_low
+					try {
+						webdriver.findElement(By.cssSelector(".scrollup")).click();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					Thread.sleep(1000);
+					wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
+					webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
+					Thread.sleep(1000);
+					} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+						}
+				
+				 //System.out.println("i value after increment"+i);
+			}
 			
+					
 		}
+		/*	
 
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.discount_css)));
 		String discount=webdriver.findElement(By.cssSelector(UIobjects.discount_css)).getText();
@@ -568,11 +642,10 @@ public class Example {
 			length=s1.length;System.out.println("length is "+length);
 			
 			//System.out.println("splitted value ie second value "+s1[2]);
-			
 		}
 		
 		//int i=1;
-		for(int i=3;i<=4;i++ )
+		for(int i=2;i<=length;i++ )
 		{  
 			System.out.println("\nclicking on: "+s1[i-1]);
 			System.out.println("i value "+i);
@@ -589,7 +662,7 @@ public class Example {
 				sort(2);//high_low
 				webdriver.findElement(By.cssSelector(".scrollup")).click();
 				Thread.sleep(20);
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#discount > span:nth-child("+i+") > label")));
+				wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#discount > span:nth-child("+i+") > label")));
 				webdriver.findElement(By.cssSelector("#discount > span:nth-child("+i+") > label")).click();
 				Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -598,7 +671,7 @@ public class Example {
 					}
 			
 			 //System.out.println("i value after increment"+i);
-		}
+		}*/
 		
 		
 		

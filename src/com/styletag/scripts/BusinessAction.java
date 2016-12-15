@@ -1,8 +1,13 @@
 package com.styletag.scripts;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
@@ -13,11 +18,11 @@ import com.styletag.functional_lib.ExcelRead;
 import com.styletag.ui_object_info.UIobjects;
 
 public class BusinessAction {
-	public WebDriver webdriver ;
-	String url;
-	Actions act;
 	WebDriverWait wait;
-	String product1 ,product2,orderNo;
+	public WebDriver webdriver;
+	Actions act;
+	String pd_product_name ,ct_product_name,orderNo;
+	int sort_flag;
 	ExcelRead xl;
 	public void BusinessAction(){
 		xl=new ExcelRead("//home//styletag//java_test//Test Framework//src//com//styletag//test_cases//InputData.xlsx");
@@ -118,7 +123,7 @@ public class BusinessAction {
 	{   
 		//try
 		int count1=0;
-		System.out.println("inside compare\n");
+		System.out.println("inside compare");
 		try {
 			Thread.sleep(9);
 			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
@@ -136,7 +141,7 @@ public class BusinessAction {
 		{
 			String Sprice1,Sprice2;
 			int Iprice1,Iprice2,j=1;
-			int sort_flag=0;
+			sort_flag=0;
 			wait = new WebDriverWait(webdriver,2);
           for (int i=1;i<count1;i++){
 				
@@ -168,7 +173,7 @@ public class BusinessAction {
 				if(option==1){
 					if(Iprice1>Iprice2)
 					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
-						System.out.println("First product price: "+Iprice1+"second product price: "+Sprice2);
+						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 						sort_flag=1;
 						break;
 					}
@@ -176,7 +181,7 @@ public class BusinessAction {
 				if (option==2 ){
 					if(Iprice1<Iprice2)
 					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
-					    System.out.println("First product price: "+Iprice1+"second product price: "+Sprice2);
+					    System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 					    sort_flag=1;
 						break;
 					}
@@ -204,7 +209,18 @@ public class BusinessAction {
 			else if(sort_flag==0 && option==2)
 				System.out.println("products are decended_by_master_price");
 			else if(sort_flag==1)
-				System.out.println("product are not in order");
+			{	
+				System.out.println("products are not in order");
+				File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
+				try {
+					FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//product_price_mismatch.png"));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			
+			}
 		}/* catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -239,6 +255,189 @@ public class BusinessAction {
 				
 	}
 	
+	public void productDetailPage()
+	{
+		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
+		System.out.println("clicking on product");
+		wait= new WebDriverWait(webdriver,10);
+		try {
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.product_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.product_css)).click();
+			
+			//get list of all tab browser
+			Set<String> allBrowser = webdriver.getWindowHandles();
+			for (String eachBrower:allBrowser){
+				//System.out.println(eachBrower);
+				if(!(eachBrower.equals(parentBrowser)))
+				{
+					//switching to child browser
+					webdriver.switchTo().window(eachBrower);
+					System.out.println("moving to product detail page");
+					break;
+				}
+			}
+			
+			
+			pd_product_name = webdriver.findElement(By.cssSelector("#sale-main-desc > div.cart-form.pull-right > h1")).getText().toLowerCase();//product Name
+			System.out.println(pd_product_name);
+			
+			System.out.println("clicking on size chart");
+			// webdriver.findElement(By.cssSelector("#cartform > div > p.view-sizechart > a:nth-child(2)")).click();// clicking on size chart
+			 //webdriver.findElement(By.cssSelector("#ngdialog4 > div.ngdialog-content > div")).click();// closing size chart
+			
+			
+			
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.option_css)));
+			WebElement options= webdriver.findElement(By.cssSelector(UIobjects.option_css));
+			int size_flag=0;
+			if (options.isDisplayed())
+			{	
+				System.out.println("selecting size");
+				for(int i=0;i<=7;i++)
+				{     size_flag=0;
+					try{
+						//Thread.sleep(1000);
+						webdriver.findElement(By.cssSelector(".in-stock:nth-child("+i +") div")).click();
+						System.out.println("selected size " +i);
+						break;
+				
+						}
+					catch (Exception e){
+						System.out.println("size " +i +" is not available");
+						size_flag=1;
+						}
+				}
+			}
+			else
+			{
+				System.out.print("Size option is not available");
+							
+			}
+			if(size_flag==1) System.out.println("sold out");
+			webdriver.findElement(By.cssSelector("#add-to-cart-button")).click();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
+			try {
+				FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//screenschot1.png"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		
+	}
 	
+	public void productCatalogPage(){
+		//Thread.sleep(2000);
+				System.out.println("clicking on c1");
+				WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
+				ethnicwear.click();
+				//Thread.sleep(1000);
+				act=new Actions(webdriver);
+				act.moveToElement(ethnicwear).build().perform();
+				
+				System.out.println("clicking on c2 or c3");
+				wait =new  WebDriverWait(webdriver,60);
+				
+				//kurta_kurtis
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
+				webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
+				//waitForSpinner();
+				
+				//dress_skirts
+				//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.skirts_dress)));
+				//webdriver.findElement(By.cssSelector(UIobjects.skirts_dress));
+				
+				//System.out.println("scrolling down");
+				//JavascriptExecutor js = (JavascriptExecutor)browser;
+				//js.executeScript("window.scrollBy(0,100)","");
+				
+				String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser. 
+				
+				//System.out.println(parentBrowser);
+               //applyFilters();	
+               //System.out.println("scrolling down");
+               JavascriptExecutor js = (JavascriptExecutor)webdriver;
+               js.executeScript("window.scrollBy(0,50)","");
+               
+               
+	}
+	
+	public void applyFilters()
+	{  
+		int length=1;
+		String s1[]=null;
+		// moving cursor to some filter type, to come out of drop down main menu- filter type - color
+		new Actions(webdriver).moveToElement(webdriver.findElement(By.cssSelector(UIobjects.color_css))).build().perform();
+			
+		wait= new WebDriverWait(webdriver, 20);
+		for(int j=2;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
+		{
+			
+			//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(selector)))
+			
+		}
+
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.discount_css)));
+		String discount=webdriver.findElement(By.cssSelector(UIobjects.discount_css)).getText();
+		System.out.println("Filter type :"+discount);
+		try {
+			Thread.sleep(2);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		webdriver.findElement(By.cssSelector(UIobjects.discount_css)).click();
+		//webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child(2) > div.filter-box-heading.text-uppercase.text-bold > h2 > a > span")).click();
+		List<WebElement> discountLable = webdriver.findElements(By.id("discount"));
+		
+		
+		for(WebElement we :discountLable )
+		{
+			//System.out.println(we.getText());
+			String s=we.getText();
+			System.out.println("Discount name are: "+s);
+			s1 = s.split("\\n");
+			length=s1.length;System.out.println("length is "+length);
+			
+			//System.out.println("splitted value ie second value "+s1[2]);
+			
+		}
+		
+		//int i=1;
+		for(int i=3;i<=4;i++ )
+		{  
+			System.out.println("\nclicking on: "+s1[i-1]);
+			System.out.println("i value "+i);
+			
+			
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#discount > span:nth-child("+i+") > label")));
+			webdriver.findElement(By.cssSelector("#discount > span:nth-child("+i+") > label")).click();
+			//waitForSpinner();
+			try {
+				//System.out.println("thread.sleep AFTER filter click");
+				Thread.sleep(1000);
+				sort(1);//low_high
+				webdriver.findElement(By.cssSelector(".scrollup")).click();
+				sort(2);//high_low
+				webdriver.findElement(By.cssSelector(".scrollup")).click();
+				Thread.sleep(20);
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#discount > span:nth-child("+i+") > label")));
+				webdriver.findElement(By.cssSelector("#discount > span:nth-child("+i+") > label")).click();
+				Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			
+			 //System.out.println("i value after increment"+i);
+		}
+			
+	}
 
 }
