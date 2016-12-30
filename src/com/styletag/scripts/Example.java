@@ -402,7 +402,7 @@ public class Example {
 		int count1=0;
 		System.out.println("inside compare");
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(3000);
 			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
 			String numberOnly= value.replaceAll("[^0-9]", "");
 			count1 = Integer.parseInt(numberOnly);
@@ -423,21 +423,26 @@ public class Example {
           for (int i=1;i<count1;i++){
 				
 				try {
-					Thread.sleep(5);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				
 				
-				//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+"1) > div > div.product-Info > span.product-price > span.product-dmrp")));
-				Sprice1= webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText();
-				//System.out.println("i value first "+i);
-				i++;
-				
-				//wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#product-container > div > ul > li:nth-child(" +i +") > div > div.product-Info > span.product-price.pull-right > span.col-orange.text-right.text-capitalize.ng-binding")));
-				Sprice2=webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText(); 
-				//System.out.println("second i value " +i);
+				try {
+					//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+"1) > div > div.product-Info > span.product-price > span.product-dmrp")));
+					Sprice1= webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText();
+					//System.out.println("i value first "+i);
+					i++;
+					
+					//wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#product-container > div > ul > li:nth-child(" +i +") > div > div.product-Info > span.product-price.pull-right > span.col-orange.text-right.text-capitalize.ng-binding")));
+					Sprice2=webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText(); 
+					//System.out.println("second i value " +i);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
 				//System.out.println("price1 and price2 before replace all"+Sprice1+Sprice2);
 				Sprice1=Sprice1.replaceAll("[^0-9]" ,"");
@@ -546,38 +551,27 @@ public class Example {
 		new Actions(webdriver).moveToElement(webdriver.findElement(By.cssSelector(UIobjects.color_css))).build().perform();
 			
 		wait= new WebDriverWait(webdriver, 20);
-		for(int j=3;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
+		for(int j=2;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
 		{
 			if(j==2||j==7)// j=2 - Discount and j=7 - Delivery type filters which are in collapsed mode
 			{
-				if (j==7)
-				{
-					// to collapse the Color filter
-					wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-2)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
-					webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-2)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
-					
-					//to collapse the Dimension filter
-					wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-1)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
-					webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+(j-1)+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
-					
-				}
 				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
 				webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
 			}
 			WebElement filtertype = webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a"));
 			System.out.println("\nFILTER TYPE: "+filtertype.getText().toLowerCase());
-			String lowercase=filtertype.getText().toLowerCase().replaceAll("[^a-z]","_");
+			String lowercase=filtertype.getText().toLowerCase().replaceAll("[^a-z]","_");//converting the filter attribute text to lower
 			
 			List<WebElement> filterattribute = webdriver.findElements(By.id(lowercase));	
 			for(WebElement we :filterattribute )
 			{
 				String s=we.getText();
-				System.out.println("FILTER ATTRIBUTES are: "+s);
+				System.out.println("FILTER ATTRIBUTES are: \n"+s);
 				s1 = s.split("\\n");
 				length=s1.length; System.out.println("length is "+length);
 				
 			}
-			for(int i=3;i<=length;i++ )
+			for(int i=1;i<=length;i++ ) // iterating filter attribute 
 			{  
 				System.out.println("\nclicking on: "+s1[i-1]);
 				System.out.println("i value "+i);
@@ -588,7 +582,7 @@ public class Example {
 				//waitForSpinner();
 				try {
 					//System.out.println("thread.sleep AFTER filter click");
-					Thread.sleep(1000);
+					Thread.sleep(3000);
 					sort(1);//low_high
 					try {
 						webdriver.findElement(By.cssSelector(".scrollup")).click();
@@ -602,80 +596,30 @@ public class Example {
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}
-					Thread.sleep(1000);
+					} 
+				
+					Thread.sleep(3000);
 					wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
 					webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
-					Thread.sleep(1000);
+					Thread.sleep(3000);
 					} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-						}
+				}
 				
 				 //System.out.println("i value after increment"+i);
+				
 			}
-			
-					
-		}
-		/*	
-
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.discount_css)));
-		String discount=webdriver.findElement(By.cssSelector(UIobjects.discount_css)).getText();
-		System.out.println("Filter type :"+discount);
-		try {
-			Thread.sleep(2);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		webdriver.findElement(By.cssSelector(UIobjects.discount_css)).click();
-		//webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child(2) > div.filter-box-heading.text-uppercase.text-bold > h2 > a > span")).click();
-		List<WebElement> discountLable = webdriver.findElements(By.id("discount"));
-		
-		
-		for(WebElement we :discountLable )
-		{
-			//System.out.println(we.getText());
-			String s=we.getText();
-			System.out.println("Discount name are: "+s);
-			s1 = s.split("\\n");
-			length=s1.length;System.out.println("length is "+length);
-			
-			//System.out.println("splitted value ie second value "+s1[2]);
-		}
-		
-		//int i=1;
-		for(int i=2;i<=length;i++ )
-		{  
-			System.out.println("\nclicking on: "+s1[i-1]);
-			System.out.println("i value "+i);
-			
-			
-			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#discount > span:nth-child("+i+") > label")));
-			webdriver.findElement(By.cssSelector("#discount > span:nth-child("+i+") > label")).click();
-			//waitForSpinner();
+			//to minimize the previously selected filter
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+			webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
 			try {
-				//System.out.println("thread.sleep AFTER filter click");
-				Thread.sleep(1000);
-				sort(1);//low_high
-				webdriver.findElement(By.cssSelector(".scrollup")).click();
-				sort(2);//high_low
-				webdriver.findElement(By.cssSelector(".scrollup")).click();
-				Thread.sleep(20);
-				wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#discount > span:nth-child("+i+") > label")));
-				webdriver.findElement(By.cssSelector("#discount > span:nth-child("+i+") > label")).click();
-				Thread.sleep(1000);
-				} catch (InterruptedException e) {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-					}
-			
-			 //System.out.println("i value after increment"+i);
-		}*/
-		
-		
-		
-		
+			}
+		}
 	}
 	
 
