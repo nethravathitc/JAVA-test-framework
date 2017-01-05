@@ -14,7 +14,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.apache.commons.io.FileUtils;
 
-import com.styletag.functional_lib.ExcelRead;
+import com.styletag.functional_lib.*;
 import com.styletag.ui_object_info.UIobjects;
 
 
@@ -25,17 +25,28 @@ public class Example {
 	String pd_product_name ,ct_product_name,orderNo;
 	int sort_flag;
 	ExcelRead xl;
+	ExcelWrite write;
+	String msg;
+	
+	public Example()
+	{
+		write= new ExcelWrite();
+		
+	}
 	
 	public static void main(String[] args){
 		
 		Example ex = new Example();
 		
-		ex.launchStyletag("http://www.styletag.com");
+		ex.launchStyletag("http://styletag.com");
 		//ex.login();
 		//ex.clearCart();
 		//ex.addToCart();
 		//ex.search();
 		ex.productCatalogPage();
+		
+		//ex.productCatalogPage2();
+		
 		ex.applyFilters();
 		//ex.productDetailPage();
 		//ex.cartCheck();
@@ -206,6 +217,7 @@ public class Example {
 	public void productDetailPage()
 	{
 		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
+		
 		System.out.println("clicking on product");
 		wait= new WebDriverWait(webdriver,10);
 		try {
@@ -383,13 +395,17 @@ public class Example {
 	public void sort(int option){
 		wait = new WebDriverWait(webdriver,5 );
 		if (option==1){
+		msg="clicking on Low-High";
 		System.out.println("\nclicking on Low-High");
+		write.writeReports("Results", msg);
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.low_high_css)));
 		webdriver.findElement(By.cssSelector(UIobjects.low_high_css)).click();
 		compare(option);
 		}
 		if (option == 2){
+			msg="\nclicking on High-Low";
 			System.out.println("\nclicking on High-Low");
+			write.writeReports("Results", msg);
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.high_low_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.high_low_css)).click();
 			compare(option);
@@ -406,7 +422,9 @@ public class Example {
 			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
 			String numberOnly= value.replaceAll("[^0-9]", "");
 			count1 = Integer.parseInt(numberOnly);
+			msg="slider value is: "+count1;
 			System.out.println("slider value is: "+count1);
+			write.writeReports("Results", msg);
 		} catch (NumberFormatException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -416,7 +434,7 @@ public class Example {
 		}
 		
 		{
-			String Sprice1,Sprice2;
+			String Sprice1=null,Sprice2=null;
 			int Iprice1,Iprice2,j=1;
 			sort_flag=0;
 			wait = new WebDriverWait(webdriver,2);
@@ -441,6 +459,9 @@ public class Example {
 					//System.out.println("second i value " +i);
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
+					msg="product"+i+" is not found/ not visible";
+					write.writeReports("Error", msg);
+					System.out.println("\n\nproduct"+i+" is not found/ not visible");// to see whether the intended product is present or not
 					e1.printStackTrace();
 				}
 				
@@ -454,7 +475,9 @@ public class Example {
 				//System.out.println(Iprice2);
 				if(option==1){
 					if(Iprice1>Iprice2)
-					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
+					{	//System.out.println("inside first if"); // in low_high, first product price is greater than second product
+						msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
+						write.writeReports("Results", msg);
 						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 						sort_flag=1;
 						break;
@@ -462,8 +485,10 @@ public class Example {
 				}
 				if (option==2 ){
 					if(Iprice1<Iprice2)
-					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
-					    System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
+					{	//System.out.println("inside second if");// in high_low, first product price is lesser than second product
+					    msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
+					    write.writeReports("Results", msg);
+						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
 					    sort_flag=1;
 						break;
 					}
@@ -487,12 +512,22 @@ public class Example {
 			
 			}
 			if(sort_flag==0 && option==1)
+			{
 				System.out.println("products are acended_by_master_price");
+				msg="products are acended_by_master_price";
+				write.writeReports("Results", msg);
+			}
 			else if(sort_flag==0 && option==2)
+			{
 				System.out.println("products are decended_by_master_price");
+				msg="products are decended_by_master_price";
+				write.writeReports("Results", msg);
+			}
 			else if(sort_flag==1)
 			{	
-				System.out.println("products are not in order");
+				System.out.println("\n ERROR!! products are not in order");
+				msg="\n ERROR!! products are not in order";
+				write.writeReports("Results", msg);
 				File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
 				try {
 					FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//product_price_mismatch.png"));
@@ -508,9 +543,235 @@ public class Example {
 			e.printStackTrace();
 		}*/
 	}
-	public void productCatalogPage(){
-		//Thread.sleep(2000);
-				System.out.println("clicking on c1");
+	
+	
+	
+public void productCatalogPage(){
+	msg = "clicking on c1";
+	System.out.println(msg);
+	
+	write.writeReports("Result", msg);
+	WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
+	ethnicwear.click();
+	//Thread.sleep(1000);
+	act=new Actions(webdriver);
+	act.moveToElement(ethnicwear).build().perform();
+	
+	msg="clicking on c2 or c3";
+	System.out.println(msg);
+	write.writeReports("Result", msg);
+	
+	wait =new  WebDriverWait(webdriver,60);
+	//kurta_kurtis
+	//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
+	//webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
+	//waitForSpinner();
+	
+	//anarkalis
+	msg="clicking on Anarkalis";
+	System.out.println(msg);
+	write.writeReports("Result", msg);
+	wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
+	webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
+	
+	//System.out.println("scrolling down");
+	//JavascriptExecutor js = (JavascriptExecutor)browser;
+	//js.executeScript("window.scrollBy(0,100)","");
+	
+	//String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser. 
+	
+	//System.out.println(parentBrowser);
+   //applyFilters();	
+   //System.out.println("scrolling down");
+   //JavascriptExecutor js = (JavascriptExecutor)webdriver;
+   //js.executeScript("window.scrollBy(0,50)","");
+   
+}
+	
+public void categoryClick(){
+	
+		WebElement category1=null,category2=null,category3=null;
+		try {
+			Thread.sleep(1000); // to wait before click on next category
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+			wait= new WebDriverWait(webdriver, 10);
+			
+			//c1 count
+			wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("#non-footer > navbar > header > div.grid-container > nav > div > ul > li")));
+			List<WebElement> c1= webdriver.findElements(By.cssSelector("#non-footer > navbar > header > div.grid-container > nav > div > ul > li"));
+			int c1_count = c1.size();
+			System.out.println("c1 length is  : "+c1.size());
+			//System.out.println("c1 text );
+			
+			for(int i=1;i<c1_count;i++) // < c1_count because last li element is search tab
+			{	
+				try {
+					Thread.sleep(3000); // to wait before click on next category
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				try {
+					//System.out.println("\n category1 count value is "+i);
+					//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".submenu> li:nth-child("+i+")")));
+					category1=webdriver.findElement(By.cssSelector(".submenu> li:nth-child("+i+")"));
+					String category1_name= category1.getText();
+					System.out.println("\nCategory1 name: "+category1_name);
+					
+					category1.click();
+					
+					
+					//to get the count of c2's
+					
+					List<WebElement> c2 = webdriver.findElements(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li"));
+					int c2_count = c2.size();
+					System.out.println("c2 count is : "+c2_count);
+					
+					// checking catergory2
+					for(int j=1;j<=c2_count;j++)
+					{
+						System.out.println("j count"+j+"\n");
+						
+						wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li > ul > li:nth-child("+j+") > ul > li")));
+						List<WebElement> c3=webdriver.findElements(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li > ul > li:nth-child("+j+") > ul > li"));
+						int c3_count =c3.size();
+						System.out.println("C3 count under c2 "+j+" :"+c3_count );
+						/*
+						try {
+							System.out.println(" j value "+j);
+							category2= webdriver.findElement(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child("+j+")"));
+							String category2_name= category2.getText();
+							String[] cat2=category2_name.split("\\n");
+							System.out.println("category2 name2: "+cat2[0]);
+							//category2.click();
+							//checking category3
+							  for(int k=1;k<=3;k++)
+							  {
+								try {
+									System.out.println(" k value "+k);
+									category3 =  category2.findElement(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child("+j+") > ul > li > ul > li:nth-child("+k+")"));
+									String category3_name=category3.getText();
+									System.out.println("Category3 names:  "+category3_name);
+									} catch (Exception e) {
+									    System.out.println("\ncategory3 with count "+k+" is not found");
+									    e.printStackTrace();
+								    }
+							  }
+							  System.out.println("\n");
+						    } catch (Exception e) {
+							   System.out.println("\ncategory2 with count "+j+" is not found");
+							  e.printStackTrace();
+						     }*/
+					}
+				  } catch (Exception e) {
+					  //System.out.println("\ncategory1 with count "+i+" is not found");
+					  e.printStackTrace();
+				  }
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		   /*for(i=1;i<=2;i++)
+			{
+			   System.out.println("\ncategory count value is "+i);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".submenu> li:nth-child("+i+")")));
+			category1=webdriver.findElement(By.cssSelector(".submenu> li:nth-child("+i+")"));
+			String category_name= category1.getText();
+			
+			System.out.println("Category name: "+category_name);
+			System.out.println("clicking on "+category_name);
+			//String c1_lower=category_name.toLowerCase();
+			//System.out.println("lower case c1 "+c1_lower);
+			category1.click();
+			
+			// checking catergory2
+			for(int j=1;j<=2;j++)
+			{
+				try {
+					//WebElement category2=category1.findElement(By.cssSelector(".text-left show-submenu > li > ul > li > ul > li:nth-child("+j+")"));
+				
+				
+				category2= webdriver.findElement(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child("+j+")"));
+				} catch (Exception e) {
+				// TODO Auto-generated catch block
+					System.out.println("\ncategory2 with count "+j+" is not found");
+					e.printStackTrace();
+					
+				}
+					for(int k=1;k<=2;k++)
+					{
+					 try {
+						category3 =  category2.findElement(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child("+j+") > ul > li > ul > li:nth-child("+k+")"));
+					    } catch (Exception e) {
+						// TODO Auto-generated catch block
+					    	System.out.println("\ncategory3 with count "+k+" is not found");
+					    	e.printStackTrace();
+						
+					    }
+					}
+			}
+			
+			*/
+			
+			
+			//"#non-footer > navbar > header > div.grid-container > nav > div > ul > li:nth-child(2) > ul > li > ul > li > ul > li:nth-child(3) > ul > li > ul > li:nth-child(2)		
+			
+			
+			
+			
+			
+			
+			/*wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child(1)")));
+			WebElement category2 = webdriver.findElement(By.cssSelector(".submenu > li:nth-child("+i+") > ul > li > ul > li > ul > li:nth-child(1)"));
+			String category2_name=category2.getText();
+			System.out.println("category2 name: "+category2_name);
+			
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} */
+			
+			//ethnic-wear
+			
+			/*String category_string[] = category_name.split("\n");
+			for(String s:category_string)
+			{
+				System.out.println("After split Category name is "+s);
+			}
+			System.out.println("Length is "+category_string.length);
+			
+			//ethnicwear.click();
+			 
+			 */
+		//}
+		
+				
+			
+		/*	 	System.out.println("clicking on c1");
 				WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
 				ethnicwear.click();
 				//Thread.sleep(1000);
@@ -520,10 +781,11 @@ public class Example {
 				System.out.println("clicking on c2 or c3");
 				wait =new  WebDriverWait(webdriver,60);
 				
+				
 				//kurta_kurtis
 				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
 				webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
-				waitForSpinner();
+				//waitForSpinner();
 				
 				//dress_skirts
 				//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.skirts_dress)));
@@ -540,6 +802,8 @@ public class Example {
                //System.out.println("scrolling down");
                JavascriptExecutor js = (JavascriptExecutor)webdriver;
                js.executeScript("window.scrollBy(0,50)","");
+               */
+               
                
                
 	}
@@ -567,14 +831,19 @@ public class Example {
 			{
 				String s=we.getText();
 				System.out.println("FILTER ATTRIBUTES are: \n"+s);
+				write.writeReports("Results", s);
 				s1 = s.split("\\n");
-				length=s1.length; System.out.println("length is "+length);
+				msg = "length of the attribute is"+length;
+				write.writeReports("Result", msg);
+				length=s1.length; System.out.println(msg);
 				
 			}
 			for(int i=1;i<=length;i++ ) // iterating filter attribute 
 			{  
-				System.out.println("\nclicking on: "+s1[i-1]);
-				System.out.println("i value "+i);
+				msg="\nclicking on: "+s1[i-1];
+				System.out.println(msg);
+				write.writeReports("Result", msg);
+				System.out.println("Filter attribute count value "+i);
 				
 				
 				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));

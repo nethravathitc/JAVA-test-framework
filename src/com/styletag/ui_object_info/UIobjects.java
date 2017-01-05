@@ -38,6 +38,7 @@ public class UIobjects {
 	public static String ethnicwear_id="ethnic-wear";
 	public static String westernwear_id="western-wear";
 	public static String kurta_kurti_css=".submenu > li:nth-child(1) > ul > li > ul > li > ul > li > ul > li:nth-child(1) > ul > li:nth-child(1) > a.col-dark-grey";
+	public static String anarkalis = ".submenu > li:nth-child(1) > ul > li > ul > li > ul > li > ul > li:nth-child(1) > ul > li:nth-child(4)";
 	public static String top_tees_css="#non-footer > navbar > header > div.grid-container > nav > div > ul > li:nth-child(1) > ul > li > ul > li > ul > li > ul > li:nth-child(1) > ul > li:nth-child(1) > a.col-dark-grey.c3_li_text.ng-binding";
 	public static String  skirts_dress = "#non-footer > navbar > header > div.grid-container > nav > div > ul > li:nth-child(1) > ul > li > ul > li > ul > li > ul > li:nth-child(1) > ul > li:nth-child(2)";
 	
