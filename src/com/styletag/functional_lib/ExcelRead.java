@@ -29,7 +29,15 @@ public class ExcelRead {
 	public String read(int row, int col){
 		
 		//sheet= wb.getSheetAt(sheetNum);
-		return sheet.getRow(row).getCell(col).getStringCellValue();
+		try {
+			return sheet.getRow(row).getCell(col).getStringCellValue();
+			
+		} catch (Exception e) {
+			
+			//System.out.println("Error in reading the excel file");
+			//e.printStackTrace();
+		}
+		return null;
 		
 	}
 
