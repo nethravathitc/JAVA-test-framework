@@ -3,6 +3,9 @@ package com.styletag.scripts;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -26,10 +29,22 @@ public class BusinessAction {
 	ExcelRead xl;
 	String msg;
 	ExcelWrite write;
+	DateFormat df;
+	Date dateobj;
+	String date;
 	public BusinessAction(ExcelWrite write1){
 		xl=new ExcelRead("//home//styletag//java_test//Test Framework//src//com//styletag//test_cases//InputData.xlsx");
 		write= write1;
-		//write.writeReports(("Error"), "inside business action");
+		df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+	    dateobj = new Date();
+	    date =df.format(dateobj);
+	    String sd[] = date.split("\\s");
+	    System.out.println(sd[0]);
+	    System.out.println(sd[1]);
+	    sd[0]=sd[0].replaceAll("\\/","_");
+	    sd[1]=sd[1].replaceAll(":","_");
+	    date="_date_"+sd[0]+"_time_"+sd[1];
+		
 	}
 	
 	public void launchStyletag(String url){
@@ -110,7 +125,7 @@ public class BusinessAction {
 		webdriver.findElement(By.cssSelector(UIobjects.search_field_css)).sendKeys(search_keyword);
 		webdriver.findElement(By.cssSelector(UIobjects.search_button_css)).click();
 		String title = webdriver.findElement(By.cssSelector(UIobjects.page_title_css)).getText();
-		msg=" Search page title "+title;
+		msg=" Search page title: "+title;
 		System.out.println(msg);
 		write.writeReports("Log",msg);
 		
@@ -121,7 +136,7 @@ public class BusinessAction {
 			msg="Products are found in the search page";
 			System.out.println(msg);
 			write.writeReports("Log", msg);
-			Driver.FLAG=0;
+			Driver.FLAG=1;
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			msg="Products are not found in the search page";
@@ -331,10 +346,13 @@ public class BusinessAction {
 	
 	public void productDetailPage()
 	{
+		int size_flag=0,size_presence_falg=0;
 		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
+		
 		msg="clicking on product";
 		System.out.println(msg);
-		write.writeReports("Log", msg);
+		write.writeReports("Log",msg);
+		
 		wait= new WebDriverWait(webdriver,10);
 		try {
 			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.product_css)));
@@ -344,79 +362,128 @@ public class BusinessAction {
 			Set<String> allBrowser = webdriver.getWindowHandles();
 			for (String eachBrower:allBrowser){
 				//System.out.println(eachBrower);
-				if(!(eachBrower.equals(parentBrowser)))
-				{
+					if(!(eachBrower.equals(parentBrowser)))
+					{
 					//switching to child browser
-					webdriver.switchTo().window(eachBrower);
-					System.out.println("moving to product detail page");
-					break;
+						webdriver.switchTo().window(eachBrower);
+						msg="moving to product detail page";
+						System.out.println(msg);
+						write.writeReports("Log",msg);
+						break;
+					}
 				}
-			}
 			
-			
-			pd_product_name = webdriver.findElement(By.cssSelector("#sale-main-desc > div.cart-form.pull-right > h1")).getText().toLowerCase();//product Name
-			msg="product name: "+pd_product_name;
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.product_title_css)));
+			pd_product_name = webdriver.findElement(By.cssSelector(UIobjects.product_title_css)).getText().toLowerCase();//product Name
+			msg="Product Name: "+pd_product_name;
 			System.out.println(msg);
-			write.writeReports("log", msg);
+			write.writeReports("log",msg);
 			
+			msg="checking for size chart";
+			System.out.println(msg);
+			write.writeReports("Log",msg);
 			// webdriver.findElement(By.cssSelector("#cartform > div > p.view-sizechart > a:nth-child(2)")).click();// clicking on size chart
 			 //webdriver.findElement(By.cssSelector("#ngdialog4 > div.ngdialog-content > div")).click();// closing size chart
 			
-			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.option_css)));
-			WebElement options= webdriver.findElement(By.cssSelector(UIobjects.option_css));
-			int size_flag=0;
-			if (options.isDisplayed())
-			{	
+			try {
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.option_css)));
+				WebElement options= webdriver.findElement(By.cssSelector(UIobjects.option_css));
+				
 				msg="selecting size";
 				System.out.println(msg);
-				write.writeReports("log", msg);
+				write.writeReports("log",msg);
 				
+				size_presence_falg=1;
 				for(int i=0;i<=7;i++)
-				{     size_flag=0;
+				{    
 					try{
 						//Thread.sleep(1000);
-						webdriver.findElement(By.cssSelector(".in-stock:nth-child("+i +") div")).click();
-						msg="selected size " +i;
-						System.out.println(msg);
-						write.writeReports("Log", msg);
+						WebElement size =webdriver.findElement(By.cssSelector(".in-stock:nth-child("+i +") div"));
+						if (size.isEnabled())
+						{
+							size.click();
+							msg="selected size: "+size.getText();
+							System.out.println(msg);
+							write.writeReports("Log",msg);
+							size_flag=1;
+						}
 						break;
 				
 						}
 					catch (Exception e){
-						msg="size "+i+" is not available";
+						
+						msg="size " +i+" is not available";
 						System.out.println(msg);
-						write.writeReports("Log", msg);
-						size_flag=1;
+						write.writeReports("Log",msg);
+						
 						}
+				}				
+				
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				msg="Product with no Variants type";
+				System.out.println(msg);
+				write.writeReports("Log",msg);
+			}
+			
+			msg="ckecking on ADD_TO_CART button enability";
+			System.out.println(msg);
+			write.writeReports("Log",msg);
+			WebElement add_to_cart_button=webdriver.findElement(By.cssSelector("#add-to-cart-button"));
+			if(add_to_cart_button.isEnabled())
+			{
+				msg="ADD_TO_CART button is enabled";
+				System.out.println(msg);
+				write.writeReports("Log",msg);
+				
+				add_to_cart_button.click();
+				Thread.sleep(2000);
+				WebElement flash_msg= webdriver.findElement(By.cssSelector(UIobjects.flash_msg_css));
+				if (flash_msg.isDisplayed())
+				{	msg="Product added to cart ,'Added to Cart' msg displayed";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
 				}
 			}
 			else
 			{
-				msg="Size option is not available";
-				System.out.print(msg);
-				write.writeReports("Log", msg);
-							
-			}
-			if(size_flag==1) //this condition never occurs, as the sold out products will be pushed to button and visible in the top if product is selected only from top.
-			{	msg="sold out";
+				msg="ADD_TO_CART button is disabled";
 				System.out.println(msg);
 				write.writeReports("Log",msg);
-			
+				 
+				if((size_presence_falg==1)&&(size_flag==0)) // size chart present and not selected
+				{
+					msg="size has not selected";
+					System.out.println(msg);
+					write.writeReports("Log",msg);
+					
+				}
+				else
+				{
+					msg="Product is already added to cart";
+					System.out.println(msg);
+					write.writeReports("Log",msg);
+				}
+				
 			}
-			msg="clicking on the add to cart button";
-			System.out.println("msg");
-			write.writeReports("Log",msg);
-			webdriver.findElement(By.cssSelector("#add-to-cart-button")).click();
 			Driver.FLAG++;
+
 		} catch (Exception e) {
-			Driver.FLAG=0;
 			e.printStackTrace();
-		}finally{
+			Driver.FLAG=0;
+		}finally{ 
+			//screenshot is taken in case of pass or fail of the testcase
 			File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
 			try {
-				FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//productdetailpage_func.png"));
-			} catch (IOException e) {
 				
+				String path="//home//styletag//Sanity_report//screen_shots//ProductDetailPage"+date+".png";
+				FileUtils.copyFile(scrFile, new File(path));
+				msg="Screenchot taken";
+				System.out.println(msg);
+				write.writeReports("Log", msg);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -426,34 +493,53 @@ public class BusinessAction {
 	}
 	
 	public void productCatalogPage(){
-		msg = "clicking on c1";
-		System.out.println(msg);
-		write.writeReports("Log", msg);
-		
-		WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
-		ethnicwear.click();
-		//Thread.sleep(1000);
-		act=new Actions(webdriver);
-		act.moveToElement(ethnicwear).build().perform();
-		
-		msg="clicking on c2 or c3";
-		System.out.println(msg);
-		write.writeReports("Log", msg);
-		
-		wait =new  WebDriverWait(webdriver,60);
-		//kurta_kurtis
-		//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
-		//webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
-		//waitForSpinner();
-		
-		//anarkalis
-		msg="clicking on Anarkalis";
-		System.out.println(msg);
-		write.writeReports("Log", msg);
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
-		webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
-		
-		Driver.FLAG++;
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			
+			e.printStackTrace();
+		}
+		try {
+			msg = "clicking on c1";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+					
+			WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
+			ethnicwear.click();
+			//Thread.sleep(1000);
+			act=new Actions(webdriver);
+			act.moveToElement(ethnicwear).build().perform();
+			
+			msg="clicking on c2 or c3";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			
+			wait =new  WebDriverWait(webdriver,60);
+			//kurta_kurtis
+			msg="clicking on Kuta_kutis";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
+			//waitForSpinner();
+			
+			//anarkalis
+			/*msg="clicking on Anarkalis";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
+			webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
+			*/
+			//this is to overcome the menu bars drop down
+			System.out.println("scrolling down");
+			JavascriptExecutor js = (JavascriptExecutor)webdriver;
+			js.executeScript("window.scrollBy(0,100)","");
+			
+			Driver.FLAG++;
+		} catch (Exception e) {
+			Driver.FLAG=0;
+			e.printStackTrace();
+		}
 		
 	}
 	

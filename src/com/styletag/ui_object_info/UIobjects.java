@@ -22,6 +22,7 @@ public class UIobjects {
 	//minicart page
 	public static String minicart_css ="#mini-cart-wrap > li > div.minicart-inner-div > a > span";
 	public static String minicart_remove_css="#minicart-bottom > p.pull-left > a";
+	public static String empty_my_cart_css ="#minicart-bottom > p.pull-left";
 	
 	//cart page
 	public static String cartProduct1_css="#cart_product_1 > div:nth-child(2) > p:nth-child(1) > a";
@@ -49,6 +50,7 @@ public class UIobjects {
 	//product detail page
 	public static String product_title_css="#sale-main-desc > div.cart-form.pull-right > h1";
 	public static String option_css="#product-size > p > strong";
+	public static String flash_msg_css="#product-view-container > cart-blurb > div > div > div > div > div > div > p:nth-child(2)";
 	
 	//Filters
 	public static String color_css = "#shared-filter > div > div.sidebar > form > div:nth-child(5) > div.filter-box-heading.text-uppercase.text-bold > h2 > a";

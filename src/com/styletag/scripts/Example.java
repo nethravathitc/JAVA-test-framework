@@ -2,6 +2,9 @@ package com.styletag.scripts;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -27,10 +30,23 @@ public class Example {
 	ExcelRead xl;
 	ExcelWrite write;
 	String msg;
+	DateFormat df;
+	Date dateobj;
+	String date;
+	
 	
 	public Example()
 	{
 		write= new ExcelWrite();
+		df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+	    dateobj = new Date();
+	    date =df.format(dateobj); String date1=date;
+	    String sd[] = date.split("\\s");
+	    System.out.println(sd[0]);
+	    System.out.println(sd[1]);
+	    sd[0]=sd[0].replaceAll("\\/","_");
+	    sd[1]=sd[1].replaceAll(":","_");
+	    date="_date_"+sd[0]+"_time_"+sd[1];
 		
 	}
 	
@@ -39,7 +55,7 @@ public class Example {
 		Example ex = new Example();
 		
 		ex.launchStyletag("http://styletag.com");
-		//ex.login();
+		ex.login();
 		//ex.clearCart();
 		//ex.addToCart();
 		//ex.search();
@@ -47,8 +63,8 @@ public class Example {
 		
 		//ex.productCatalogPage2();
 		
-		ex.applyFilters();
-		//ex.productDetailPage();
+		//ex.applyFilters();
+		ex.productDetailPage();
 		//ex.cartCheck();
 		//ex.checkout();
 				
@@ -104,26 +120,36 @@ public class Example {
 		}
 	
 	public void clearCart() {
-		System.out.println("clearing cart");
+		msg="clearing cart";
+		System.out.println(msg);
+		write.writeReports("Log", msg);
 		//Thread.sleep(500);
 		
 		try {
-			wait = new WebDriverWait(webdriver,10);
+			wait = new WebDriverWait(webdriver,3);
 			
-			//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.minicart_css)));
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.minicart_css)));
 			WebElement minicart = webdriver.findElement(By.cssSelector(UIobjects.minicart_css));
 			
 			new Actions(webdriver).moveToElement(minicart).build().perform();
-			Thread.sleep(100);
+			//Thread.sleep(1500);
 			
 			try {
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.minicart_remove_css)));
-				webdriver.findElement(By.cssSelector("#minicart-bottom > p.pull-left > a")).click();
-				System.out.println("cart cleared \n");
-				Thread.sleep(5);
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.empty_my_cart_css)));
+				WebElement empty = webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css));
+				if (empty.isDisplayed())
+				{	
+					webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css)).click();
+					msg="cart cleared ";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+				}
+				//Thread.sleep(5);
 			} catch (Exception e) {
-				System.out.println("cart is already empty follwing is the stack trace\n");
-				e.printStackTrace();
+				msg="cart is already empty ";
+				System.out.println(msg);
+				write.writeReports("Log", msg);
+				//e.printStackTrace();
 			}
 		} catch (Exception e) {
 			System.out.println("clear cart catch block");
@@ -216,9 +242,13 @@ public class Example {
 	
 	public void productDetailPage()
 	{
+		int size_flag=0,size_presence_falg=0;
 		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
 		
-		System.out.println("clicking on product");
+		msg="clicking on product";
+		System.out.println(msg);
+		write.writeReports("Log",msg);
+		
 		wait= new WebDriverWait(webdriver,10);
 		try {
 			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.product_css)));
@@ -228,24 +258,115 @@ public class Example {
 			Set<String> allBrowser = webdriver.getWindowHandles();
 			for (String eachBrower:allBrowser){
 				//System.out.println(eachBrower);
-				if(!(eachBrower.equals(parentBrowser)))
-				{
+					if(!(eachBrower.equals(parentBrowser)))
+					{
 					//switching to child browser
-					webdriver.switchTo().window(eachBrower);
-					System.out.println("moving to product detail page");
-					break;
+						webdriver.switchTo().window(eachBrower);
+						msg="moving to product detail page";
+						System.out.println(msg);
+						write.writeReports("Log",msg);
+						break;
+					}
 				}
-			}
 			
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.product_title_css)));
+			pd_product_name = webdriver.findElement(By.cssSelector(UIobjects.product_title_css)).getText().toLowerCase();//product Name
+			msg="Product Name: "+pd_product_name;
+			System.out.println(msg);
+			write.writeReports("log",msg);
 			
-			pd_product_name = webdriver.findElement(By.cssSelector("#sale-main-desc > div.cart-form.pull-right > h1")).getText().toLowerCase();//product Name
-			System.out.println(pd_product_name);
-			
-			System.out.println("clicking on size chart");
+			msg="checking for size chart";
+			System.out.println(msg);
+			write.writeReports("Log",msg);
 			// webdriver.findElement(By.cssSelector("#cartform > div > p.view-sizechart > a:nth-child(2)")).click();// clicking on size chart
 			 //webdriver.findElement(By.cssSelector("#ngdialog4 > div.ngdialog-content > div")).click();// closing size chart
 			
+			try {
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.option_css)));
+				WebElement options= webdriver.findElement(By.cssSelector(UIobjects.option_css));
+				
+				msg="selecting size";
+				System.out.println(msg);
+				write.writeReports("log",msg);
+				
+				size_presence_falg=1;
+				for(int i=0;i<=7;i++)
+				{    
+					try{
+						//Thread.sleep(1000);
+						WebElement size =webdriver.findElement(By.cssSelector(".in-stock:nth-child("+i +") div"));
+						if (size.isEnabled())
+						{
+							size.click();
+							msg="selected size: "+size.getText();
+							System.out.println(msg);
+							write.writeReports("Log",msg);
+							size_flag=1;
+						}
+						break;
+				
+						}
+					catch (Exception e){
+						
+						msg="size " +i+" is not available";
+						System.out.println(msg);
+						write.writeReports("Log",msg);
+						
+						}
+				}				
+				
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				msg="Product with no Variants type";
+				System.out.println(msg);
+				write.writeReports("Log",msg);
+			}
 			
+			msg="ckecking on ADD_TO_CART button enability";
+			System.out.println(msg);
+			write.writeReports("Log",msg);
+			WebElement add_to_cart_button=webdriver.findElement(By.cssSelector("#add-to-cart-button"));
+			if(add_to_cart_button.isEnabled())
+			{
+				msg="ADD_TO_CART button is enabled";
+				System.out.println(msg);
+				write.writeReports("Log",msg);
+				
+				add_to_cart_button.click();
+				Thread.sleep(2000);
+				WebElement flash_msg= webdriver.findElement(By.cssSelector(UIobjects.flash_msg_css));
+				if (flash_msg.isDisplayed())
+				{	msg="Product added to cart ,'Added to Cart' msg displayed";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+				}
+			}
+			else
+			{
+				msg="ADD_TO_CART button is disabled";
+				System.out.println(msg);
+				write.writeReports("Log",msg);
+				 
+				if((size_presence_falg==1)&&(size_flag==0)) // size chart present and not selected
+				{
+					msg="size has not selected";
+					System.out.println(msg);
+					write.writeReports("Log",msg);
+					
+				}
+				else
+				{
+					msg="Product is already added to cart";
+					System.out.println(msg);
+					write.writeReports("Log",msg);
+				}
+				
+			}
+			Driver.FLAG++;
+			
+			
+		/*			
 			
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.option_css)));
 			WebElement options= webdriver.findElement(By.cssSelector(UIobjects.option_css));
@@ -275,13 +396,20 @@ public class Example {
 			}
 			if(size_flag==1) System.out.println("sold out");
 			webdriver.findElement(By.cssSelector("#add-to-cart-button")).click();
+			
+			*/
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Driver.FLAG=0;
 		}finally{
 			File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
 			try {
-				FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//screenschot1.png"));
+				
+				String path="//home//styletag//Sanity_report//screen_shots//ProductDetailPage"+date+".png";
+				FileUtils.copyFile(scrFile, new File(path));
+				msg="Screenchot taken";
+				System.out.println(msg);
+				write.writeReports("Log", msg);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -417,53 +545,47 @@ public class Example {
 		//try
 		int count1=0;
 		System.out.println("inside compare");
+		
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(9);
 			String value=webdriver.findElement(By.cssSelector(UIobjects.slider_value_css)).getText();
 			String numberOnly= value.replaceAll("[^0-9]", "");
 			count1 = Integer.parseInt(numberOnly);
-			msg="slider value is: "+count1;
 			System.out.println("slider value is: "+count1);
-			write.writeReports("Results", msg);
+			write.writeReports("Log","slider value is: "+count1 );
 		} catch (NumberFormatException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+			Driver.FLAG=0;
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+			Driver.FLAG=0;
 		}
 		
 		{
-			String Sprice1=null,Sprice2=null;
+			String Sprice1,Sprice2;
 			int Iprice1,Iprice2,j=1;
 			sort_flag=0;
 			wait = new WebDriverWait(webdriver,2);
           for (int i=1;i<count1;i++){
 				
 				try {
-					Thread.sleep(500);
+					Thread.sleep(5);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				
 				
-				try {
-					//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+"1) > div > div.product-Info > span.product-price > span.product-dmrp")));
-					Sprice1= webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText();
-					//System.out.println("i value first "+i);
-					i++;
-					
-					//wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#product-container > div > ul > li:nth-child(" +i +") > div > div.product-Info > span.product-price.pull-right > span.col-orange.text-right.text-capitalize.ng-binding")));
-					Sprice2=webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText(); 
-					//System.out.println("second i value " +i);
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					msg="product"+i+" is not found/ not visible";
-					write.writeReports("Error", msg);
-					System.out.println("\n\nproduct"+i+" is not found/ not visible");// to see whether the intended product is present or not
-					e1.printStackTrace();
-				}
+				//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+"1) > div > div.product-Info > span.product-price > span.product-dmrp")));
+				Sprice1= webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText();
+				//System.out.println("i value first "+i);
+				i++;
+				
+				//wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#product-container > div > ul > li:nth-child(" +i +") > div > div.product-Info > span.product-price.pull-right > span.col-orange.text-right.text-capitalize.ng-binding")));
+				Sprice2=webdriver.findElement(By.cssSelector("#product-container > div.ng-isolate-scope > ul > li:nth-child("+i+") > div > div.product-Info > span.product-price > span.product-dmrp.col-orange.text-capitalize.ng-binding")).getText(); 
+				//System.out.println("second i value " +i);
 				
 				//System.out.println("price1 and price2 before replace all"+Sprice1+Sprice2);
 				Sprice1=Sprice1.replaceAll("[^0-9]" ,"");
@@ -475,20 +597,21 @@ public class Example {
 				//System.out.println(Iprice2);
 				if(option==1){
 					if(Iprice1>Iprice2)
-					{	//System.out.println("inside first if"); // in low_high, first product price is greater than second product
+					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
 						msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
-						write.writeReports("Results", msg);
-						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
+						System.out.println(msg);
+						write.writeReports("Error", msg);
+						
 						sort_flag=1;
 						break;
 					}
 				}
 				if (option==2 ){
 					if(Iprice1<Iprice2)
-					{	//System.out.println("inside second if");// in high_low, first product price is lesser than second product
+					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
 					    msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
-					    write.writeReports("Results", msg);
-						System.out.println("product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2);
+						System.out.println(msg);
+						write.writeReports("Error", msg);
 					    sort_flag=1;
 						break;
 					}
@@ -507,33 +630,40 @@ public class Example {
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
+							Driver.FLAG=0;
 					}
 				}
 			
 			}
 			if(sort_flag==0 && option==1)
-			{
-				System.out.println("products are acended_by_master_price");
+			{	
 				msg="products are acended_by_master_price";
-				write.writeReports("Results", msg);
+				System.out.println(msg);
+				write.writeReports("Log", msg);
+				Driver.FLAG++;
+				
 			}
 			else if(sort_flag==0 && option==2)
 			{
-				System.out.println("products are decended_by_master_price");
 				msg="products are decended_by_master_price";
-				write.writeReports("Results", msg);
+				System.out.println(msg);
+				write.writeReports("Log", msg);
+				Driver.FLAG++;
+				
 			}
 			else if(sort_flag==1)
 			{	
-				System.out.println("\n ERROR!! products are not in order");
-				msg="\n ERROR!! products are not in order";
-				write.writeReports("Results", msg);
+				msg="products are not in order";
+				System.out.println(msg);
+				write.writeReports("Error", msg);
+				Driver.FLAG=0;
 				File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
 				try {
 					FileUtils.copyFile(scrFile, new File("//home//styletag//java_exp_pgm//product_price_mismatch.png"));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					//Driver.FLAG=0;
 				}
 				
 			
@@ -542,51 +672,60 @@ public class Example {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
+		Driver.FLAG++;
 	}
 	
 	
-	
-public void productCatalogPage(){
-	msg = "clicking on c1";
-	System.out.println(msg);
-	
-	write.writeReports("Result", msg);
-	WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
-	ethnicwear.click();
-	//Thread.sleep(1000);
-	act=new Actions(webdriver);
-	act.moveToElement(ethnicwear).build().perform();
-	
-	msg="clicking on c2 or c3";
-	System.out.println(msg);
-	write.writeReports("Result", msg);
-	
-	wait =new  WebDriverWait(webdriver,60);
-	//kurta_kurtis
-	//wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
-	//webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
-	//waitForSpinner();
-	
-	//anarkalis
-	msg="clicking on Anarkalis";
-	System.out.println(msg);
-	write.writeReports("Result", msg);
-	wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
-	webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
-	
-	//System.out.println("scrolling down");
-	//JavascriptExecutor js = (JavascriptExecutor)browser;
-	//js.executeScript("window.scrollBy(0,100)","");
-	
-	//String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser. 
-	
-	//System.out.println(parentBrowser);
-   //applyFilters();	
-   //System.out.println("scrolling down");
-   //JavascriptExecutor js = (JavascriptExecutor)webdriver;
-   //js.executeScript("window.scrollBy(0,50)","");
-   
-}
+	public void productCatalogPage(){
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			
+			e.printStackTrace();
+		}
+		try {
+			msg = "clicking on c1";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+					
+			WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
+			ethnicwear.click();
+			//Thread.sleep(1000);
+			act=new Actions(webdriver);
+			act.moveToElement(ethnicwear).build().perform();
+			
+			msg="clicking on c2 or c3";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			
+			wait =new  WebDriverWait(webdriver,60);
+			//kurta_kurtis
+			msg="clicking on Kuta_kutis";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
+			waitForSpinner();
+			
+			//anarkalis
+			/*msg="clicking on Anarkalis";
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
+			webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
+			*/
+			//this is to overcome the menu bars drop down
+			System.out.println("scrolling down");
+			JavascriptExecutor js = (JavascriptExecutor)webdriver;
+			js.executeScript("window.scrollBy(0,100)","");
+			
+			Driver.FLAG++;
+		} catch (Exception e) {
+			Driver.FLAG=0;
+			e.printStackTrace();
+		}
+		
+	}
 	
 public void categoryClick(){
 	
@@ -675,24 +814,7 @@ public void categoryClick(){
 			}
 			
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+	
 		   /*for(i=1;i<=2;i++)
 			{
 			   System.out.println("\ncategory count value is "+i);
@@ -807,89 +929,89 @@ public void categoryClick(){
                
                
 	}
-	public void applyFilters()
-	{  
-		int length=1;
-		String s1[]=null;
-		// moving cursor to some filter type, to come out of drop down main menu- filter type - color
-		new Actions(webdriver).moveToElement(webdriver.findElement(By.cssSelector(UIobjects.color_css))).build().perform();
-			
-		wait= new WebDriverWait(webdriver, 20);
-		for(int j=2;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
+public void applyFilters()
+{  
+	int length=1;
+	String s1[]=null;
+	// moving cursor to some filter type, to come out of drop down main menu- filter type - color
+	new Actions(webdriver).moveToElement(webdriver.findElement(By.cssSelector(UIobjects.color_css))).build().perform();
+		
+	wait= new WebDriverWait(webdriver, 20);
+	for(int j=2;j<=7;j++)// j=2 :starting from discount filters . 7 different filter types.
+	{
+		if(j==2||j==7)// j=2 - Discount and j=7 - Delivery type filters which are in collapsed mode
 		{
-			if(j==2||j==7)// j=2 - Discount and j=7 - Delivery type filters which are in collapsed mode
-			{
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
-				webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
-			}
-			WebElement filtertype = webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a"));
-			System.out.println("\nFILTER TYPE: "+filtertype.getText().toLowerCase());
-			String lowercase=filtertype.getText().toLowerCase().replaceAll("[^a-z]","_");//converting the filter attribute text to lower
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+			webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
+		}
+		WebElement filtertype = webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a"));
+		System.out.println("\nFILTER TYPE: "+filtertype.getText().toLowerCase());
+		String lowercase=filtertype.getText().toLowerCase().replaceAll("[^a-z]","_");//converting the filter attribute text to lower
+		
+		List<WebElement> filterattribute = webdriver.findElements(By.id(lowercase));	
+		for(WebElement we :filterattribute )
+		{
+			String s=we.getText();
+			System.out.println("FILTER ATTRIBUTES are: \n"+s);
+			write.writeReports("Log", s);
+			s1 = s.split("\\n");
+			msg = "No of attributes in the selected Filter type is "+length;
+			write.writeReports("Log", msg);
+			length=s1.length; System.out.println(msg);
 			
-			List<WebElement> filterattribute = webdriver.findElements(By.id(lowercase));	
-			for(WebElement we :filterattribute )
-			{
-				String s=we.getText();
-				System.out.println("FILTER ATTRIBUTES are: \n"+s);
-				write.writeReports("Results", s);
-				s1 = s.split("\\n");
-				msg = "length of the attribute is"+length;
-				write.writeReports("Result", msg);
-				length=s1.length; System.out.println(msg);
-				
-			}
-			for(int i=1;i<=length;i++ ) // iterating filter attribute 
-			{  
-				msg="\nclicking on: "+s1[i-1];
-				System.out.println(msg);
-				write.writeReports("Result", msg);
-				System.out.println("Filter attribute count value "+i);
-				
-				
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
-				webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
-				//waitForSpinner();
+		}
+		for(int i=1;i<=length;i++ ) // iterating filter attribute 
+		{  
+			msg="\nclicking on: "+s1[i-1];
+			System.out.println(msg);
+			write.writeReports("Log", msg);
+			System.out.println("Filter attribute count value "+i);
+			
+			
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
+			webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
+			//waitForSpinner();
+			try {
+				//System.out.println("thread.sleep AFTER filter click");
+				Thread.sleep(3000);
+				sort(1);//low_high
 				try {
-					//System.out.println("thread.sleep AFTER filter click");
-					Thread.sleep(3000);
-					sort(1);//low_high
-					try {
-						webdriver.findElement(By.cssSelector(".scrollup")).click();
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					sort(2);//high_low
-					try {
-						webdriver.findElement(By.cssSelector(".scrollup")).click();
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} 
-				
-					Thread.sleep(3000);
-					wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
-					webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
-					Thread.sleep(3000);
-					} catch (InterruptedException e) {
+					webdriver.findElement(By.cssSelector(".scrollup")).click();
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				 //System.out.println("i value after increment"+i);
-				
-			}
-			//to minimize the previously selected filter
-			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
-			webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
-			try {
+				sort(2);//high_low
+				try {
+					webdriver.findElement(By.cssSelector(".scrollup")).click();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+			
 				Thread.sleep(3000);
-			} catch (InterruptedException e) {
+				wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")));
+				webdriver.findElement(By.cssSelector("#"+lowercase+" > span:nth-child("+i+") > label")).click();
+				Thread.sleep(3000);
+				} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			 //System.out.println("i value after increment"+i);
+			
+		}
+		//to minimize the previously selected filter
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")));
+		webdriver.findElement(By.cssSelector("#shared-filter > div > div.sidebar > form > div:nth-child("+j+") > div.filter-box-heading.text-uppercase.text-bold > h2 > a")).click();
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
+}
 	
 
 }
