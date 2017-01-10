@@ -55,7 +55,7 @@ public class Example {
 		Example ex = new Example();
 		
 		ex.launchStyletag("http://styletag.com");
-		ex.login();
+		//ex.login();
 		//ex.clearCart();
 		//ex.addToCart();
 		//ex.search();
@@ -120,6 +120,8 @@ public class Example {
 		}
 	
 	public void clearCart() {
+		int cart_flag=0;
+		
 		msg="clearing cart";
 		System.out.println(msg);
 		write.writeReports("Log", msg);
@@ -138,20 +140,35 @@ public class Example {
 				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.empty_my_cart_css)));
 				WebElement empty = webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css));
 				if (empty.isDisplayed())
-				{	
+				{	cart_flag=1;
 					webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css)).click();
 					msg="cart cleared ";
 					System.out.println(msg);
 					write.writeReports("Log", msg);
+					Driver.FLAG++;
 				}
 				//Thread.sleep(5);
 			} catch (Exception e) {
-				msg="cart is already empty ";
-				System.out.println(msg);
-				write.writeReports("Log", msg);
+				if(cart_flag==1)
+				{	msg="'Empty_My_Cart' link is present but_couldn't clear the cart";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+					write.writeReports("Error", msg);
+					Driver.FLAG=0;
+				
+				}
+				else
+				{
+					msg="cart is already empty ";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+					Driver.FLAG++;
+				}
 				//e.printStackTrace();
 			}
+			
 		} catch (Exception e) {
+			Driver.FLAG=0;
 			System.out.println("clear cart catch block");
 			
 			e.printStackTrace();
@@ -399,15 +416,22 @@ public class Example {
 			
 			*/
 		} catch (Exception e) {
+			if(check500error())
+			{
+				System.out.println("ERROR!!!! 500 Error");
+				
+			}
 			e.printStackTrace();
+			
 			Driver.FLAG=0;
+			
 		}finally{
 			File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
 			try {
 				
 				String path="//home//styletag//Sanity_report//screen_shots//ProductDetailPage"+date+".png";
 				FileUtils.copyFile(scrFile, new File(path));
-				msg="Screenchot taken";
+				msg="Screenshot taken";
 				System.out.println(msg);
 				write.writeReports("Log", msg);
 			} catch (IOException e) {
@@ -439,24 +463,44 @@ public class Example {
 	
 	public void checkout() {
 		try {
-			System.out.println("proceed to check out");
+			System.out.println("clicking on mini cart to proceed to check out");
+			//System.out.println("proceed to check out");
 			webdriver.findElement(By.cssSelector(UIobjects.minicart_css)).click();
-			//Thread.sleep(2000);
+			
+			System.out.println("clicking on 'proceed to checkout' button");
 			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.proceed_to_checkout_button_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.proceed_to_checkout_button_css)).click();
 			//Thread.sleep(4000);
 			
-			System.out.println("proceed as logged in user");
+			String user_logged_in_email=webdriver.findElement(By.cssSelector("#auth-body > div > div:nth-child(1) > p.font-16 > strong")).getText();
+			if(!(user_logged_in_email.equals("")))
+			{
+				System.out.println("Error!! user Id is not displayed");
+			}
+			else
+			{
+				System.out.println("User logged in as:  "+user_logged_in_email);
+			}
+			
+			
+			System.out.println("proceeding as logged in user");
 			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.continue_email_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.continue_email_css)).click();
-			//Thread.sleep(2000);
+			
 			
 			System.out.println("selecting address");
 			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.select_add1_css)));
-			webdriver.findElement(By.cssSelector(UIobjects.select_add1_css)).click();
-			Thread.sleep(1000);
-
-			webdriver.findElement(By.cssSelector(UIobjects.continue_add_css)).click();
+			WebElement continue_button=webdriver.findElement(By.cssSelector(UIobjects.continue_add_css));
+			int i=0;
+			while(!continue_button.isEnabled())
+			{
+				i++;
+				webdriver.findElement(By.cssSelector("#address-body a.overflow-address :nth-child("+i+")")).click();
+				Thread.sleep(1000);
+				
+			}
+			
+			
 			//Thread.sleep(2000);
 			
 
@@ -683,6 +727,7 @@ public class Example {
 			
 			e.printStackTrace();
 		}
+				
 		try {
 			msg = "clicking on c1";
 			System.out.println(msg);
@@ -699,21 +744,21 @@ public class Example {
 			write.writeReports("Log", msg);
 			
 			wait =new  WebDriverWait(webdriver,60);
-			//kurta_kurtis
+			/*//kurta_kurtis
 			msg="clicking on Kuta_kutis";
 			System.out.println(msg);
 			write.writeReports("Log", msg);
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
-			waitForSpinner();
-			
+			//waitForSpinner();
+			*/
 			//anarkalis
-			/*msg="clicking on Anarkalis";
+			msg="clicking on Anarkalis";
 			System.out.println(msg);
 			write.writeReports("Log", msg);
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
 			webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
-			*/
+			
 			//this is to overcome the menu bars drop down
 			System.out.println("scrolling down");
 			JavascriptExecutor js = (JavascriptExecutor)webdriver;
@@ -722,6 +767,11 @@ public class Example {
 			Driver.FLAG++;
 		} catch (Exception e) {
 			Driver.FLAG=0;
+			if(check500error())
+			{
+				System.out.println("500 error");
+				
+			}
 			e.printStackTrace();
 		}
 		
@@ -1013,5 +1063,18 @@ public void applyFilters()
 	}
 }
 	
+public Boolean check500error()
+{
+	WebElement error_class = webdriver.findElement(By.cssSelector("#non-footer > div.content-only > div:nth-child(3) > error500 > section"));
+	if(error_class.isDisplayed())
+	{
+		WebElement text = webdriver.findElement(By.cssSelector("#non-footer > div.content-only > div:nth-child(3) > error500 > section > div > div > div.error-text"));
+		System.out.println(text.getText());
+		return true;
+	}
+	else 
+		return false;
+	
+}
 
 }

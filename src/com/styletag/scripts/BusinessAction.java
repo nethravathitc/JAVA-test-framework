@@ -100,34 +100,40 @@ public class BusinessAction {
 	}
 	
 	public void search()
-	{	String search_keyword,sort_value;
+	{	try {
+		Thread.sleep(2500); // this is required in case of search tab is overlapped with any flash msg ex: in product detail page after adding the product to cart, flash msg overlaps the seacrh tab
+	} catch (InterruptedException e2) {
+		
+		e2.printStackTrace();
+	}
+		String search_keyword,sort_value;
 	    int count=1,sort_value_int;
 		ExcelRead xl=new ExcelRead("//home//styletag//java_test//Test Framework//src//com//styletag//test_cases//InputData.xlsx");
 		xl.rowCountInSheet(2);
 		search_keyword=xl.read(1,0);
 		sort_value=xl.read(1,1);
 		
-		//sort_value=sort_value.replaceAll("[^0-9]", "");
-		//sort_value_int=Integer.parseInt(sort_value);
-		//System.out.println("sort value: "+sort_value_int);
+		sort_value=sort_value.replaceAll("[^0-9]", "");
+		sort_value_int=Integer.parseInt(sort_value);
+		System.out.println("sort value: "+sort_value_int);
 		
 		msg="Clicking on search tab";
 		System.out.println(msg);
-		write.writeReports("Log", msg);
+		write.writeReports("Log", msg,Driver.column);
 		
 		webdriver.findElement(By.cssSelector(UIobjects.search_field_css)).click();
 		System.out.println("Clearing the field");
 		webdriver.findElement(By.cssSelector(UIobjects.search_field_css)).clear();
 		
 		msg="Entering "+search_keyword+" in search tab";
-		write.writeReports("Log",msg);
+		write.writeReports("Log",msg,Driver.column);
 		
 		webdriver.findElement(By.cssSelector(UIobjects.search_field_css)).sendKeys(search_keyword);
 		webdriver.findElement(By.cssSelector(UIobjects.search_button_css)).click();
 		String title = webdriver.findElement(By.cssSelector(UIobjects.page_title_css)).getText();
 		msg=" Search page title: "+title;
 		System.out.println(msg);
-		write.writeReports("Log",msg);
+		write.writeReports("Log",msg,Driver.column);
 		
 		wait=new WebDriverWait(webdriver,20);
 		WebElement product;
@@ -135,13 +141,13 @@ public class BusinessAction {
 			product = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.product_css)));
 			msg="Products are found in the search page";
 			System.out.println(msg);
-			write.writeReports("Log", msg);
+			write.writeReports("Log", msg,Driver.column);
 			Driver.FLAG=1;
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			msg="Products are not found in the search page";
 			System.out.println(msg);
-			write.writeReports("Log", msg);
+			write.writeReports("Log", msg,Driver.column);
 			Driver.FLAG=0;
 		}
 		try {
@@ -151,7 +157,7 @@ public class BusinessAction {
 			e.printStackTrace();
 		}
 		
-		//sort(sort_value_int);
+		sort(sort_value_int);
 		
 			
 	}
@@ -317,26 +323,55 @@ public class BusinessAction {
 	}
 	
 	public void clearCart() {
-		System.out.println("clearing cart");
+		int cart_flag=0;
+		
+		msg="clearing cart";
+		System.out.println(msg);
+		write.writeReports("Log", msg);
 		//Thread.sleep(500);
 		
 		try {
-			wait = new WebDriverWait(webdriver,20);
+			wait = new WebDriverWait(webdriver,3);
 			
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.minicart_css)));
 			WebElement minicart = webdriver.findElement(By.cssSelector(UIobjects.minicart_css));
 			
 			new Actions(webdriver).moveToElement(minicart).build().perform();
+			//Thread.sleep(1500);
 			
 			try {
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.minicart_remove_css)));
-				webdriver.findElement(By.cssSelector("#minicart-bottom > p.pull-left > a")).click();
-				System.out.println("cart cleared \n");
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.empty_my_cart_css)));
+				WebElement empty = webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css));
+				if (empty.isDisplayed())
+				{	cart_flag=1;
+					webdriver.findElement(By.cssSelector(UIobjects.empty_my_cart_css)).click();
+					msg="cart cleared ";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+					Driver.FLAG++;
+				}
+				//Thread.sleep(5);
 			} catch (Exception e) {
-				System.out.println("cart is already empty follwing is the stack trace\n");
+				if(cart_flag==1)
+				{	msg="'Empty_My_Cart' link is present but_couldn't clear the cart";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+					write.writeReports("Error", msg);
+					Driver.FLAG=0;
+				
+				}
+				else
+				{
+					msg="cart is already empty ";
+					System.out.println(msg);
+					write.writeReports("Log", msg);
+					Driver.FLAG++;
+				}
 				//e.printStackTrace();
 			}
+			
 		} catch (Exception e) {
+			Driver.FLAG=0;
 			System.out.println("clear cart catch block");
 			
 			e.printStackTrace();
@@ -346,12 +381,14 @@ public class BusinessAction {
 	
 	public void productDetailPage()
 	{
+		System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
 		int size_flag=0,size_presence_falg=0;
 		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
 		
 		msg="clicking on product";
 		System.out.println(msg);
-		write.writeReports("Log",msg);
+		write.writeReports("Log",msg,Driver.column);
+		//write.writeReports("Log", "clicking on product", Driver.column);
 		
 		wait= new WebDriverWait(webdriver,10);
 		try {
@@ -368,7 +405,7 @@ public class BusinessAction {
 						webdriver.switchTo().window(eachBrower);
 						msg="moving to product detail page";
 						System.out.println(msg);
-						write.writeReports("Log",msg);
+						write.writeReports("Log",msg,Driver.column);
 						break;
 					}
 				}
@@ -377,11 +414,11 @@ public class BusinessAction {
 			pd_product_name = webdriver.findElement(By.cssSelector(UIobjects.product_title_css)).getText().toLowerCase();//product Name
 			msg="Product Name: "+pd_product_name;
 			System.out.println(msg);
-			write.writeReports("log",msg);
+			write.writeReports("log",msg,Driver.column);
 			
 			msg="checking for size chart";
 			System.out.println(msg);
-			write.writeReports("Log",msg);
+			write.writeReports("Log",msg,Driver.column);
 			// webdriver.findElement(By.cssSelector("#cartform > div > p.view-sizechart > a:nth-child(2)")).click();// clicking on size chart
 			 //webdriver.findElement(By.cssSelector("#ngdialog4 > div.ngdialog-content > div")).click();// closing size chart
 			
@@ -391,7 +428,7 @@ public class BusinessAction {
 				
 				msg="selecting size";
 				System.out.println(msg);
-				write.writeReports("log",msg);
+				write.writeReports("log",msg,Driver.column);
 				
 				size_presence_falg=1;
 				for(int i=0;i<=7;i++)
@@ -404,7 +441,7 @@ public class BusinessAction {
 							size.click();
 							msg="selected size: "+size.getText();
 							System.out.println(msg);
-							write.writeReports("Log",msg);
+							write.writeReports("Log",msg,Driver.column);
 							size_flag=1;
 						}
 						break;
@@ -414,7 +451,7 @@ public class BusinessAction {
 						
 						msg="size " +i+" is not available";
 						System.out.println(msg);
-						write.writeReports("Log",msg);
+						write.writeReports("Log",msg,Driver.column);
 						
 						}
 				}				
@@ -424,18 +461,18 @@ public class BusinessAction {
 				e1.printStackTrace();
 				msg="Product with no Variants type";
 				System.out.println(msg);
-				write.writeReports("Log",msg);
+				write.writeReports("Log",msg,Driver.column);
 			}
 			
 			msg="ckecking on ADD_TO_CART button enability";
 			System.out.println(msg);
-			write.writeReports("Log",msg);
+			write.writeReports("Log",msg,Driver.column);
 			WebElement add_to_cart_button=webdriver.findElement(By.cssSelector("#add-to-cart-button"));
 			if(add_to_cart_button.isEnabled())
 			{
 				msg="ADD_TO_CART button is enabled";
 				System.out.println(msg);
-				write.writeReports("Log",msg);
+				write.writeReports("Log",msg,Driver.column);
 				
 				add_to_cart_button.click();
 				Thread.sleep(2000);
@@ -443,27 +480,27 @@ public class BusinessAction {
 				if (flash_msg.isDisplayed())
 				{	msg="Product added to cart ,'Added to Cart' msg displayed";
 					System.out.println(msg);
-					write.writeReports("Log", msg);
+					write.writeReports("Log", msg,Driver.column);
 				}
 			}
 			else
 			{
 				msg="ADD_TO_CART button is disabled";
 				System.out.println(msg);
-				write.writeReports("Log",msg);
+				write.writeReports("Log",msg,Driver.column);
 				 
 				if((size_presence_falg==1)&&(size_flag==0)) // size chart present and not selected
 				{
 					msg="size has not selected";
 					System.out.println(msg);
-					write.writeReports("Log",msg);
+					write.writeReports("Log",msg,Driver.column);
 					
 				}
 				else
 				{
 					msg="Product is already added to cart";
 					System.out.println(msg);
-					write.writeReports("Log",msg);
+					write.writeReports("Log",msg,Driver.column);
 				}
 				
 			}
@@ -479,9 +516,9 @@ public class BusinessAction {
 				
 				String path="//home//styletag//Sanity_report//screen_shots//ProductDetailPage"+date+".png";
 				FileUtils.copyFile(scrFile, new File(path));
-				msg="Screenchot taken";
+				msg="Screenshot taken";
 				System.out.println(msg);
-				write.writeReports("Log", msg);
+				write.writeReports("Log", msg,Driver.column);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -500,9 +537,10 @@ public class BusinessAction {
 			e.printStackTrace();
 		}
 		try {
+				System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
 			msg = "clicking on c1";
 			System.out.println(msg);
-			write.writeReports("Log", msg);
+			write.writeReports("Log", msg,Driver.column);
 					
 			WebElement ethnicwear=	webdriver.findElement(By.id(UIobjects.ethnicwear_id));
 			ethnicwear.click();
@@ -512,24 +550,24 @@ public class BusinessAction {
 			
 			msg="clicking on c2 or c3";
 			System.out.println(msg);
-			write.writeReports("Log", msg);
+			write.writeReports("Log", msg,Driver.column);
 			
 			wait =new  WebDriverWait(webdriver,60);
 			//kurta_kurtis
-			msg="clicking on Kuta_kutis";
+			/*msg="clicking on Kuta_kutis";
 			System.out.println(msg);
 			write.writeReports("Log", msg);
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.kurta_kurti_css)));
 			webdriver.findElement(By.cssSelector(UIobjects.kurta_kurti_css)).click();
-			//waitForSpinner();
+			*///waitForSpinner();
 			
 			//anarkalis
-			/*msg="clicking on Anarkalis";
+			msg="clicking on Anarkalis";
 			System.out.println(msg);
-			write.writeReports("Log", msg);
+			write.writeReports("Log", msg,Driver.column);
 			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.anarkalis)));
 			webdriver.findElement(By.cssSelector(UIobjects.anarkalis)).click();
-			*/
+			
 			//this is to overcome the menu bars drop down
 			System.out.println("scrolling down");
 			JavascriptExecutor js = (JavascriptExecutor)webdriver;
@@ -626,5 +664,84 @@ public class BusinessAction {
 			}
 		}
 	}
+	public void cartCheck() {
+		try {
+			Thread.sleep(500);
+			System.out.println("Checking cart");
+			webdriver.findElement(By.cssSelector(UIobjects.minicart_css)).click();
+			Thread.sleep(3000);
+			ct_product_name= webdriver.findElement(By.cssSelector(UIobjects.cartProduct1_css)).getText().toLowerCase();
+			if(pd_product_name.equals(ct_product_name))
+				System.out.println("product is added to cart");
+			else
+				System.out.println("product is not added to cart");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}	
+	
+	public void checkout() {
+		try {
+			System.out.println("proceed to check out");
+			webdriver.findElement(By.cssSelector(UIobjects.minicart_css)).click();
+			//Thread.sleep(2000);
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.proceed_to_checkout_button_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.proceed_to_checkout_button_css)).click();
+			//Thread.sleep(4000);
+			
+			System.out.println("proceed as logged in user");
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.continue_email_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.continue_email_css)).click();
+			//Thread.sleep(2000);
+			
+			System.out.println("selecting address");
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.select_add1_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.select_add1_css)).click();
+			Thread.sleep(1000);
 
+			webdriver.findElement(By.cssSelector(UIobjects.continue_add_css)).click();
+			//Thread.sleep(2000);
+			
+
+			System.out.println("clicking pay button");
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.proceed_to_pay_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.proceed_to_pay_css)).click();
+			//Thread.sleep(10000);
+			
+			System.out.println("COD payment");
+			wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(UIobjects.COD_btn_css)));
+			//webdriver.findElement(By.cssSelector(UIobjects.COD_btn_css)).click();
+			Thread.sleep(1000);
+			
+			System.out.println("COD payment");
+			int cod_flag=0;
+			if (webdriver.findElement(By.cssSelector("#codButton")).isDisplayed())
+				{
+					System.out.println("clicking on place order button");
+					webdriver.findElement(By.cssSelector("#codButton")).click();
+					cod_flag=1;
+				}
+			else
+				System.out.println("COD not available");
+			
+			Thread.sleep(250000);
+			
+			if(cod_flag==1)
+			{
+				orderNo= webdriver.findElement(By.cssSelector("#order-cancel > div > section > p:nth-child(2) > span")).getText();
+				System.out.println(orderNo);
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+	
+	
 }
