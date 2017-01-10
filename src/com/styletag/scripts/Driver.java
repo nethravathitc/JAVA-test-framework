@@ -12,13 +12,14 @@ public class Driver {
 	public static int column=0;
 	public static int row_flag=0;
 	public static int row_num=0;
+	public static int block=0;
 		
 	public static void main(String[] args) {
 		
-		String execution_flag,actions,msg,url;
+		String execution_flag,actions,msg,url,failed_actions="";
 		ArrayList<String> array = new ArrayList<String>();
 		
-		url="http://styletag.com";
+		url="http://origin-www2.stest.in";
 		ExcelWrite write= new ExcelWrite();
 		BusinessAction baction= new BusinessAction(write);
 		
@@ -31,6 +32,7 @@ public class Driver {
 		array.add("TEST SCENARIO");
 		array.add("TEST CASE ID");
 		array.add("PASS/FAIL");
+		array.add("Failed Functions");
 		write.writeReports("Result", array);
 		array.removeAll(array); // to remove the elements added to array
 		
@@ -66,7 +68,7 @@ public class Driver {
 				row_num=write.lastRowNum("Log");// this will get the row num before the Action name is 
 				row_num++;
 				row=row_num;// this to store the starting the row no from where the first action logs
-				System.out.println("row_num before executing action and col num "+row_num+" "+column);
+				//System.out.println("row_num before executing action and col num "+row_num+" "+column);
 				write.writeReports("Error", scenario);
 				write.writeReports("Log", scenario);
 				int k=1;	
@@ -87,6 +89,11 @@ public class Driver {
 							row_flag=1;// this is to indicate rows are added already
 							System.out.println("Inside driver row_flag and col_no after executn a function"+row_flag+" "+column);
 							row_num=row;
+							if(FLAG==0)
+							{
+								failed_actions=failed_actions.concat(actions);// adding Action name to Result sheet in case of error
+								failed_actions=failed_actions+" ";
+							}
 						} catch (Exception e) 
 						{
 							//e.printStackTrace();
@@ -101,8 +108,10 @@ public class Driver {
 					array.add("FAIL");
 				else
 					array.add("PASS");
+				array.add(failed_actions);// adding failed action after the scenarios result
 				write.writeReports("Result", array);
 				row_flag=0;
+				failed_actions="";
 				
 			}
 			i++;

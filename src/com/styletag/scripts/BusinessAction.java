@@ -3,6 +3,8 @@ package com.styletag.scripts;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -54,6 +56,15 @@ public class BusinessAction {
 		webdriver.get(url);
 		webdriver.manage().window().maximize();
 		}
+	public void printException(Exception e) // to write the e.printstacktrace to Error sheet
+	{
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		msg=sw.toString();
+		write.writeReports("Error", "stacktrace o/p", Driver.column);
+		write.writeReports("Error", msg, Driver.column);
+	}
 	
 	public void login() {
 		
@@ -142,12 +153,20 @@ public class BusinessAction {
 			msg="Products are found in the search page";
 			System.out.println(msg);
 			write.writeReports("Log", msg,Driver.column);
-			Driver.FLAG=1;
+			sort(sort_value_int);
+			if(Driver.FLAG!=0)
+			{	Driver.FLAG++;
+				write.writeReports("Log", "PASS",Driver.column);
+			}
+			else
+				Driver.FLAG++;
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			msg="Products are not found in the search page";
 			System.out.println(msg);
-			write.writeReports("Log", msg,Driver.column);
+			write.writeReports("Log", "FAIL", Driver.column);
+			write.writeReports("Error", msg,Driver.column);
+			printException(e1);
 			Driver.FLAG=0;
 		}
 		try {
@@ -157,7 +176,7 @@ public class BusinessAction {
 			e.printStackTrace();
 		}
 		
-		sort(sort_value_int);
+		
 		
 			
 	}
@@ -166,22 +185,40 @@ public class BusinessAction {
 		if (option==1){
 		msg="clicking on Low-High";
 		System.out.println("\nclicking on Low-High");
-		write.writeReports("Log", msg);
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.low_high_css)));
-		webdriver.findElement(By.cssSelector(UIobjects.low_high_css)).click();
-		
-		Driver.FLAG++;
-		compare(option);
+		write.writeReports("Log", msg,Driver.column);
+		try {
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.low_high_css)));
+			webdriver.findElement(By.cssSelector(UIobjects.low_high_css)).click();
+			compare(option);
+			if(Driver.FLAG!=0)
+				Driver.FLAG++;
+			} catch (Exception e) {
+			Driver.FLAG=0;
+			write.writeReports("Log","FAIL inside sort function ", Driver.column);
+			write.writeReports("Error","inside sort function",Driver.column);
+			printException(e);
+			e.printStackTrace();
+			}
+				
 		}
 		if (option == 2){
 			msg="\nclicking on High-Low";
 			System.out.println("\nclicking on High-Low");
-			write.writeReports("Log", msg);
-			wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.high_low_css)));
-			webdriver.findElement(By.cssSelector(UIobjects.high_low_css)).click();
+			write.writeReports("Log", msg,Driver.column);
+			try {
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(UIobjects.high_low_css)));
+				webdriver.findElement(By.cssSelector(UIobjects.high_low_css)).click();
+				compare(option);
+				if(Driver.FLAG!=0)
+					Driver.FLAG++;
+			} catch (Exception e) {
+				Driver.FLAG=0;
+				write.writeReports("Log","FAIL inside sort function ", Driver.column);
+				write.writeReports("Error","inside sort function",Driver.column);
+				printException(e);
+				e.printStackTrace();
+			}
 			
-			Driver.FLAG++;
-			compare(option);
 		}
 		
 		
@@ -199,7 +236,7 @@ public class BusinessAction {
 			String numberOnly= value.replaceAll("[^0-9]", "");
 			count1 = Integer.parseInt(numberOnly);
 			System.out.println("slider value is: "+count1);
-			write.writeReports("Log","slider value is: "+count1 );
+			write.writeReports("Log","slider value is: "+count1,Driver.column );
 		} catch (NumberFormatException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -247,7 +284,8 @@ public class BusinessAction {
 					{	System.out.println("inside first if"); // in low_high, first product price is greater than second product
 						msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
 						System.out.println(msg);
-						write.writeReports("Error", msg);
+						write.writeReports("Log","FAIL",Driver.column);
+						write.writeReports("Error", msg,Driver.column);
 						
 						sort_flag=1;
 						break;
@@ -258,7 +296,8 @@ public class BusinessAction {
 					{	System.out.println("inside second if");// in high_low, first product price is lesser than second product
 					    msg="product"+(i-1)+" price: "+Iprice1+" product"+i+" price: "+Sprice2;
 						System.out.println(msg);
-						write.writeReports("Error", msg);
+						write.writeReports("Log","FAIL",Driver.column);
+						write.writeReports("Error", msg,Driver.column);
 					    sort_flag=1;
 						break;
 					}
@@ -286,7 +325,7 @@ public class BusinessAction {
 			{	
 				msg="products are acended_by_master_price";
 				System.out.println(msg);
-				write.writeReports("Log", msg);
+				write.writeReports("Log", msg,Driver.column);
 				Driver.FLAG++;
 				
 			}
@@ -294,7 +333,7 @@ public class BusinessAction {
 			{
 				msg="products are decended_by_master_price";
 				System.out.println(msg);
-				write.writeReports("Log", msg);
+				write.writeReports("Log", msg,Driver.column);
 				Driver.FLAG++;
 				
 			}
@@ -381,7 +420,7 @@ public class BusinessAction {
 	
 	public void productDetailPage()
 	{
-		System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
+		//System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
 		int size_flag=0,size_presence_falg=0;
 		String parentBrowser = webdriver.getWindowHandle();// capturing parent tab browser.
 		
@@ -481,7 +520,9 @@ public class BusinessAction {
 				{	msg="Product added to cart ,'Added to Cart' msg displayed";
 					System.out.println(msg);
 					write.writeReports("Log", msg,Driver.column);
+					
 				}
+				Driver.FLAG++;
 			}
 			else
 			{
@@ -493,7 +534,9 @@ public class BusinessAction {
 				{
 					msg="size has not selected";
 					System.out.println(msg);
-					write.writeReports("Log",msg,Driver.column);
+					write.writeReports("Error",msg,Driver.column);
+					write.writeReports("Log", "FAIL", Driver.column);
+					Driver.FLAG=0;
 					
 				}
 				else
@@ -501,14 +544,19 @@ public class BusinessAction {
 					msg="Product is already added to cart";
 					System.out.println(msg);
 					write.writeReports("Log",msg,Driver.column);
+					Driver.FLAG++;
 				}
 				
 			}
-			Driver.FLAG++;
+			
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			write.writeReports("log", "FAIL", Driver.column);
+			write.writeReports("Error", "Following is the stack trace",Driver.column);
+			printException(e);// this to write exception to Error file.
 			Driver.FLAG=0;
+			
 		}finally{ 
 			//screenshot is taken in case of pass or fail of the testcase
 			File scrFile = ((TakesScreenshot)webdriver).getScreenshotAs(OutputType.FILE);
@@ -537,7 +585,7 @@ public class BusinessAction {
 			e.printStackTrace();
 		}
 		try {
-				System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
+				//System.out.println("Driver.column num inside productCatalogPage "+Driver.column);
 			msg = "clicking on c1";
 			System.out.println(msg);
 			write.writeReports("Log", msg,Driver.column);
@@ -574,8 +622,11 @@ public class BusinessAction {
 			js.executeScript("window.scrollBy(0,100)","");
 			
 			Driver.FLAG++;
+			write.writeReports("Log", "PASS",Driver.column);
 		} catch (Exception e) {
 			Driver.FLAG=0;
+			write.writeReports("Log", "FAIL",Driver.column);
+			printException(e);
 			e.printStackTrace();
 		}
 		

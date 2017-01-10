@@ -240,7 +240,7 @@ public class ExcelWrite {
 				
 				rowsh1=spreadsheet1.getLastRowNum();
 				
-				if(i<rowsh2)
+				if(i<rowsh1)
 				{
 					//System.out.println("inside i<rowsh1 and column value is "+col+ "column value is"+column );
 					//System.out.println("i value and rowsh2 value "+i+" "+rowsh2);
@@ -263,7 +263,7 @@ public class ExcelWrite {
 					//System.out.println("i value and rowsh2 value "+i+" "+rowsh2);
 					
 					rowsh1++;
-					row= spreadsheet2.createRow(rowsh1);
+					row= spreadsheet1.createRow(rowsh1);
 					//if(column!=-1)
 						//col=column;
 					int j=0;
@@ -357,7 +357,7 @@ public class ExcelWrite {
 					//System.out.println("inside i<rowsh1 and column value is "+col+ "column value is"+column );
 					//System.out.println("i value and rowsh2 value "+i+" "+rowsh2);
 					
-					rowsh2++;
+					rowsh3++;
 					row= spreadsheet3.createRow(rowsh3);
 					//if(column!=-1)
 						//col=column;
